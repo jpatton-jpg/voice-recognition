@@ -7,6 +7,7 @@ from numpy import power as pw
 from numpy import e as e
 from numpy import divide as div
 
+
 class ActivFunc:
     ''' activation function for RBF.
     Args: dimension (int), center (one per dimension, np float array)) and width (float)
@@ -23,9 +24,18 @@ class ActivFunc:
             return pw(e,div(-1*np.sum(tmp),self.width))
 
 
-NN = ActivFunc(2,np.array([-1,-1]),0.25)
-print(NN)
-print(NN.eval(np.array([-1,-1])))
+class ActivFuncArray(ActivFunc):
+    ''' array of activation functions '''
+    def __init__(self, num=1, dim=1, center=0, width=1):
+        self.list = []
+        for i in range(num):
+            self.list.append(ActivFunc(dim,center,width))
+        self.func = np.array(self.list)
+
+
+fa = ActivFuncArray(18,18,np.zeros(18),0.25)
+print(fa.func)
+print(fa.func[0].eval(np.array([-1,-1])))
 
 '''
 def gauss(x,y,width):
