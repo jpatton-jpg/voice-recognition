@@ -1,14 +1,14 @@
 # main.py       #
 # Joseph Patton #
 
-from voicerec import mp3_to_wav,parse_wav
-from voicerec import spectral_centroid,get_fft
-from voicerec import get_spectral_flux,get_rolloff
+from voicerec import mp3_to_wav, parse_wav
+from voicerec import spectral_centroid, get_fft
+from voicerec import get_spectral_flux, get_rolloff
 import numpy as np
 import matplotlib.pyplot as plt
 import librosa
 
-mp3_file = 'obama_speeches.mp3'
+mp3_file = 'obama.mp3'
 wav_file = 'obama.wav'
 
 # read audio file and convert to wav #
@@ -21,33 +21,35 @@ bigN = audio_ch1.size  # Fs*t, total points in signal
 N = 8192               # FFT size
 
 # print some useful values #
-print(f'Sampling Rate: {Fs}')
+print(f'Sampling Rate:           {Fs}')
 print(f'Total Number of Samples: {bigN}')
-print(f'FFT Size: {N}')
+print(f'FFT Size:                {N}')
 print(f'# of Spectrums that will be generated: {bigN//N}')
 
-from kaiser import wind  # window function as list #
-wind = np.array(wind)    # change to np.array      #
+from kaiser import wind  # get window function for fft as np array #
 
 Y_old = np.zeros(N//2)
 for i in range(bigN//N):
     # get 8192 samples #
     y = audio_ch1[N*i:N*(i+1)]
 
-    # get Mel-Frequency Cepstal Coefficients MFCC #
+    # calc Mel-Frequency Cepstal Coefficients MFCC #
     mfcc = np.squeeze(librosa.feature.mfcc(y=y,sr=Fs,n_mfcc=13,hop_length=N+1))
 
-    # get zero-crossing rate #
+    # calc zero-crossing rate #
+    # value from 0 to 1       #
     zcr = np.count_nonzero(librosa.core.zero_crossings(y))/N
 
     # get real part of fft #
     f,Y = get_fft(y,wind,N,Fs)
 
     # calc spectral roll-off #
-    sro = get_rolloff(Y,N,f)
+    # normalize from 0 to 1  #
+    sro = get_rolloff(Y,N,f) / f[-1]
 
     # calc spectral centroid #
-    s_cent = spectral_centroid(f,Y)
+    # normalize from 0 to 1  #
+    s_cent = spectral_centroid(f,Y) / f[-1]
 
     # calc spectral flux #
     flux = get_spectral_flux(Y_old,Y,Fs)
