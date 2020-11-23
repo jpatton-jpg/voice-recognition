@@ -2,8 +2,11 @@
 # Radial Basis Function Network #
 # Joseph Patton                 #
 
+
 import numpy as np
 from kmeans import kmeans
+from kmeans import find_widths
+
 
 class ActivFunc:
     ''' 
@@ -60,10 +63,11 @@ def init_activation_functions(training_data,data_dimensions,num_clusters):
     centers = kmeans(num_clusters,training_data)
     # init array of activation functions #
     afa = ActivFuncArray(num_clusters,data_dimensions,np.zeros(data_dimensions),1) 
+    # find widths #
+    widths = find_widths(centers,k=2)
     for i in range(num_clusters):
         afa.func[i].center = centers[i]
-        #afa.func[i].width  = width[i]
-        afa.func[i].width  = 0.25
+        afa.func[i].width  = widths[i]
     return afa
 
 
@@ -106,11 +110,15 @@ def train_rbf(learning_rate,training_data,dim,cluster_num):
         # keep track of training iterations #
         i += 1
         if i%50000 == 0:
-            print(i)
+            print(f'Iterations Completed: {i}')
     # print results #
-    print("sse: ",sse)
-    for i in range(len(weights)):
-        print(weights[i])
+    print(f"sse: {sse}")
+    print(f'Weights: {weights}')
+
+
+
+
+
 
 # input data #
 with open('x.txt', 'r') as f:
@@ -120,4 +128,5 @@ with open('y.txt', 'r') as f:
 with open('desired.txt', 'r') as f:
     desired = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
 
+# train rbf #
 train_rbf(0.0001,np.array([x,y,desired]),2,9)
