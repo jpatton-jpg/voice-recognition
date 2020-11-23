@@ -11,6 +11,12 @@ import librosa
 mp3_file = 'obama.mp3'
 wav_file = 'obama.wav'
 
+##############################################################
+#
+# Open audio file and extract training data from file
+#
+##############################################################
+
 # read audio file and convert to wav #
 #mp3_to_wav(mp3_file,wav_file)
 
@@ -54,7 +60,6 @@ for i in range(bigN//N):
     # calc spectral flux #
     flux = get_spectral_flux(Y_old,Y,Fs)
     Y_old = np.copy(Y)
-
 
     # plot spectrum #
     plt.style.use('ggplot')
