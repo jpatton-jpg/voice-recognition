@@ -3,53 +3,57 @@
 # Joseph Patton                 #
 
 import numpy as np
-from numpy import power as pw
 from numpy import e as e
 from numpy import divide as div
 
 
 class ActivFunc:
     ''' activation function for RBF.
-    Args: dimension (int), center (one per dimension, np float array)) and width (float)
+    Args: dimension (int), 
+          center (one per dimension, np float array)),
+          width (float)
     '''
     def __init__(self,dim=1,center=0,width=1):
-        self.dim = dim
+        self.dim    = dim
         self.center = center
-        self.width = width
+        self.width  = width
     def eval(self,value=0):
-        if value.size != self.dim:
+        if value.shape[1] != self.dim:
             print("ActiveFunc: eval() error. Wrong number of value dimensions given")
         else:
-            tmp = pw(value - self.center,2)
-            return pw(e,div(-1*np.sum(tmp),self.width))
+            tmp = np.power(value-self.center,2)
+            return np.power(e,div(-1*np.sum(tmp,axis=1),self.width))
 
 
 class ActivFuncArray(ActivFunc):
     ''' array of activation functions '''
     def __init__(self, num=1, dim=1, center=0, width=1):
-        self.list = []
+        self.func = np.zeros(num,dtype=ActivFunc)
         for i in range(num):
-            self.list.append(ActivFunc(dim,center,width))
-        self.func = np.array(self.list)
+            self.func[i] = ActivFunc(dim,center,width)
+    def eval_all(self,value=0):
+        return np.array([thisfunc.eval(value) for thisfunc in self.func])
 
 
-fa = ActivFuncArray(18,18,np.zeros(18),0.25)
-print(fa.func)
-print(fa.func[0].eval(np.array([-1,-1])))
-
-'''
 def gauss(x,y,width):
-    out = (NN(x,y,width),NZ(x,y,width),NP(x,y,width),ZN(x,y,width),
-           ZZ(x,y,width),ZP(x,y,width),PN(x,y,width),PZ(x,y,width),
-           PP(x,y,width))
-    return np.stack(out,axis=1)
+    out = ActivFuncArray(9,2,np.zeros(2),0.25)
+    out.func[0].center = [-1.,-1.]
+    out.func[1].center = [-1., 0.]
+    out.func[2].center = [-1., 1.]
+    out.func[3].center = [ 0.,-1.]
+    out.func[4].center = [ 0., 0.]
+    out.func[5].center = [ 0., 1.]
+    out.func[6].center = [ 1.,-1.]
+    out.func[7].center = [ 1., 0.]
+    out.func[8].center = [ 1., 1.]
+    return out.eval_all(np.stack([x,y],axis=1))
 
 def sum_square_error(g,desired,weights):
-    actual = np.dot(g,weights)
-    return np.sum(pw(desired-actual,2)), desired-actual
+    actual = np.dot(weights,g)
+    return np.sum(np.power(desired-actual,2)), desired-actual
 
-def gradient(g,des_min_act):
-    return np.dot(des_min_act,g)
+def gradient(g,error):
+    return np.dot(g,error)
 
 
 # input data #
@@ -77,10 +81,10 @@ i = 0
 while abs(sse_diff) > 1e-30:
     i += 1
     # get sse and desired-actual values #
-    sse,des_min_act = sum_square_error(g,desired,weights)
+    sse,error = sum_square_error(g,desired,weights)
 
     # get gradient #
-    grad = np.transpose(gradient(g,des_min_act))
+    grad = np.transpose(gradient(g,error))
 
     # recalculate weights #
     weights = weights + (grad * learning_rate)
@@ -97,4 +101,3 @@ while abs(sse_diff) > 1e-30:
 print("sse: ",sse)
 for i in range(len(weights)):
     print(weights[i])
-'''
