@@ -1,7 +1,7 @@
 # main.py       #
 # Joseph Patton #
 
-from voicerec import get_data
+from components import get_data
 from rbf import train_rbf
 from rbf import evaluate_point
 import numpy as np
@@ -39,13 +39,14 @@ weights,afa = train_rbf(learning_rate,training_data,data_dimensions,cluster_num)
 # Test RBF with found weights and activation function parameters
 #
 ###################################################################
+
 success = 0
 failure = 0
-for i in range(training_data.shape[0]):
-    val = evaluate_point(afa,weights,training_data[i,0:data_dimensions])
-    if (val >= 0.5) and (training_data[i,-1] == 1):
+for data in training_data:
+    val = evaluate_point(afa,weights,data[0:data_dimensions])
+    if (val >= 0.5) and (data[-1] == 1):
         success += 1
-    elif (val < 0.5) and (training_data[i,-1] == 0):
+    elif (val < 0.5) and (data[-1] == 0):
         success += 1
     else:
         failure += 1

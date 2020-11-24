@@ -1,4 +1,4 @@
-# voicerec.py   #
+# components.py #
 # Joseph Patton #
 
 import numpy as np
