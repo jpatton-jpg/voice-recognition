@@ -1,79 +1,52 @@
 # main.py       #
 # Joseph Patton #
 
-from voicerec import mp3_to_wav, parse_wav
-from voicerec import spectral_centroid, get_fft
-from voicerec import get_spectral_flux, get_rolloff
+from voicerec import get_data
+from rbf import train_rbf
+from rbf import evaluate_point
 import numpy as np
-import matplotlib.pyplot as plt
-import librosa
 
-mp3_file = 'obama.mp3'
-wav_file = 'obama.wav'
 
-##############################################################
+###################################################################
 #
 # Open audio file and extract training data from file
 #
-##############################################################
+###################################################################
 
-# read audio file and convert to wav #
-#mp3_to_wav(mp3_file,wav_file)
+mp3_file = 'obama.mp3'
+isthisobama = 1  # this audio is obama
+training_data = get_data(mp3_file,isthisobama)
 
-# get ch1 data and sampling rate from wav file #
-Fs, audio_ch1 = parse_wav(wav_file)
+mp3_file = 'not_obama.mp3'
+isthisobama = 0  # this audio is not obama
+training_data = np.vstack((training_data,get_data(mp3_file,isthisobama)))
 
-bigN = audio_ch1.size  # Fs*t, total points in signal
-N = 8192               # FFT size
 
-# print some useful values #
-print(f'Sampling Rate:           {Fs}')
-print(f'Total Number of Samples: {bigN}')
-print(f'FFT Size:                {N}')
-print(f'# of Spectrums that will be generated: {bigN//N}')
+###################################################################
+#
+# Train RBF with training data
+#
+###################################################################
 
-from kaiser import wind  # get window function for fft as np array #
+learning_rate   = 0.0001
+data_dimensions = 4
+cluster_num     = 10
+weights,afa = train_rbf(learning_rate,training_data,data_dimensions,cluster_num)
 
-Y_old = np.zeros(N//2)
-for i in range(bigN//N):
-    # get 8192 samples #
-    y = audio_ch1[N*i:N*(i+1)]
 
-    # calc Mel-Frequency Cepstal Coefficients MFCC #
-    mfcc = np.squeeze(librosa.feature.mfcc(y=y,sr=Fs,n_mfcc=13,hop_length=N+1))
-
-    # calc zero-crossing rate #
-    # value from 0 to 1       #
-    zcr = np.count_nonzero(librosa.core.zero_crossings(y))/N
-
-    # get real part of fft #
-    f,Y = get_fft(y,wind,N,Fs)
-
-    # calc spectral roll-off #
-    # normalize from 0 to 1  #
-    sro = get_rolloff(Y,N,f) / f[-1]
-
-    # calc spectral centroid #
-    # normalize from 0 to 1  #
-    s_cent = spectral_centroid(f,Y) / f[-1]
-
-    # calc spectral flux #
-    flux = get_spectral_flux(Y_old,Y,Fs)
-    Y_old = np.copy(Y)
-
-    # plot spectrum #
-    plt.style.use('ggplot')
-    fig,ax = plt.subplots()
-    plt.plot(f,Y,linewidth=1)
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    plt.ylabel('Amplitude')
-    plt.xlabel('Frequency [Hz]')
-    plt.show()
-
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#ax.imshow(sg, cmap='hot', aspect=(bigN//N)/(N//2))
-#plt.ylabel('Frequency (Hz)')
-#plt.xlabel('Window (8192 samples)')
-#plt.show()
+###################################################################
+#
+# Test RBF with found weights and activation function parameters
+#
+###################################################################
+success = 0
+failure = 0
+for i in range(training_data.shape[0]):
+    val = evaluate_point(afa,weights,training_data[i,0:data_dimensions])
+    if (val >= 0.5) and (training_data[i,-1] == 1):
+        success += 1
+    elif (val < 0.5) and (training_data[i,-1] == 0):
+        success += 1
+    else:
+        failure += 1
+print(f'Success rate: {success/(success+failure)}%')

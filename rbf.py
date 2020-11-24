@@ -29,7 +29,6 @@ class ActivFunc:
         else:
             tmp = np.power(value-self.center,2)
             return np.power(np.e,np.divide(-1*np.sum(tmp),self.width))
-            
 
 
 class ActivFuncArray(ActivFunc):
@@ -48,36 +47,25 @@ class ActivFuncArray(ActivFunc):
         return np.array([thisfunc.eval(value) for thisfunc in self.func])
 
 
-#def gauss(x,y,width):
-#    out = ActivFuncArray(9,2,np.zeros(2),0.25)
-#    out.func[0].center = [-1,-1]
-#    out.func[1].center = [-1, 0]
-#    out.func[2].center = [-1, 1]
-#    out.func[3].center = [ 0,-1]
-#    out.func[4].center = [ 0, 0]
-#    out.func[5].center = [ 0, 1]
-#    out.func[6].center = [ 1,-1]
-#    out.func[7].center = [ 1, 0]
-#    out.func[8].center = [ 1, 1]
-#    return out.eval_all(np.stack([x,y],axis=1))
-
-
 def init_activation_functions(training_data,data_dimensions,num_clusters):
     ''' find the centers and widths of the activation functions '''
+    print('Finding activation function values... ')
     # find centers using kmeans clustering #
-    centers = kmeans(num_clusters,training_data)
+    centers = kmeans(num_clusters,np.transpose(training_data))
     # init array of activation functions #
-    afa = ActivFuncArray(num_clusters,data_dimensions,np.zeros(data_dimensions),1) 
+    afa=ActivFuncArray(num_clusters,data_dimensions,np.zeros(data_dimensions),1)
     # find widths #
     widths = find_widths(centers,k=2)
     for i in range(num_clusters):
         afa.func[i].center = centers[i]
         afa.func[i].width  = widths[i]
+    print(f'Function Centers: {centers}')
+    print(f'Function Widths: {widths}')
     return afa
 
 
 def evaluate_activation_functions(functions,training_data):
-    return functions.eval_all(np.stack(training_data,axis=1))
+    return functions.eval_all(training_data)
 
 
 def evaluate_point(functions,weights,point):
@@ -95,20 +83,24 @@ def gradient(activ_funcs,error):
 
 
 def train_rbf(learning_rate,training_data,dim,cluster_num):
+    print('Training RBF...')
     # initialize weights vector #
-    weights = np.transpose(np.zeros(cluster_num))
+    weights = np.transpose(np.random.rand(cluster_num))
     # initialize activation functions #
-    activ_funcs = init_activation_functions(training_data[0:dim],dim,cluster_num)
+    activ_funcs = init_activation_functions(training_data[:,0:dim],
+                                            dim,cluster_num)
     # evaluate activation functions at all training data points #
-    evaluated_funcs = evaluate_activation_functions(activ_funcs,training_data[0:dim])
+    evaluated_funcs = evaluate_activation_functions(activ_funcs,
+                                                    training_data[:,0:dim])
     # sum squared error difference #
-    sse_diff = 100
-    sse_old = 0
+    sse_diff = 1
+    sse_old = 1000000
     # train RBF iteratively until error stops changing #
     i = 0
     while abs(sse_diff) > 1e-30:
+    #while abs(sse_diff) > .000001:
         # get sse and desired-actual values #
-        sse,error = sum_square_error(evaluated_funcs,training_data[-1],weights)
+        sse,error=sum_square_error(evaluated_funcs,training_data[:,-1],weights)
         # get gradient #
         grad = gradient(evaluated_funcs,error)
         # recalculate weights #
@@ -125,29 +117,23 @@ def train_rbf(learning_rate,training_data,dim,cluster_num):
     print(f'Weights: {weights}')
     return weights,activ_funcs
 
-
-
-
-
-
 # input data #
-with open('x.txt', 'r') as f:
-    x = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
-with open('y.txt', 'r') as f:
-    y = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
-with open('desired.txt', 'r') as f:
-    desired = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
+#with open('x.txt', 'r') as f:
+#    x = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
+#with open('y.txt', 'r') as f:
+#    y = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
+#with open('desired.txt', 'r') as f:
+#    desired = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
 
 # train rbf. get final weights and array of activation functions #
-weights,afa = train_rbf(0.0001,np.array([x,y,desired]),2,9)
+#weights,afa = train_rbf(0.0001,np.transpose(np.vstack((x,y,desired))),2,11)
 
 # test rbf #
-vals = [[-0.813339009464012,	-0.195601260988185],
-[0.410240608446244,	0.105472590938348],
-[-0.197188986165927,	0.10619560709464],
-[-0.617995690818348,	0.192327594197712],
-[-0.635906675816573,	-0.486379196222679],
-[0.30261078988199,	-0.78436491649839]]
+#vals = [[-0.813339009464012,	-0.195601260988185],
+#[0.410240608446244,	0.105472590938348],
+#[-0.197188986165927,	0.10619560709464],
+#[-0.617995690818348,	0.192327594197712],
+#[-0.635906675816573,	-0.486379196222679]]
 
-for i in vals:
-    print(f'Val: {i}\nEval: {evaluate_point(afa,weights,np.array(i))}\n')
+#for i in vals:
+#    print(f'Val: {i}\nEval: {evaluate_point(afa,weights,np.array(i))}\n')
