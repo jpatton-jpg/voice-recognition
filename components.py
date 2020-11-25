@@ -20,17 +20,6 @@ def get_spectral_flux(X_old, X_cur, f_s):
     return vsf
 
 
-def mp3_to_wav(in_filename,out_filename):
-    ''' convert an mp3 file to wav '''
-    # read mp3 file #
-    #mp3 = pydub.AudioSegment.from_mp3(in_filename).split_to_mono()
-    # convert channel 1 to wav #
-    #mp3[0].export(out_filename, format='wav')
-    # remove silence #
-    #remove_silence(out_filename)
-    return
-
-
 def parse_wav(filename):
     ''' read wav file and find sample rate. return ch 1 '''
     Fs, audio = scipy.io.wavfile.read(filename)
@@ -74,8 +63,6 @@ def get_rolloff(Y,N,f,rolloff=.85):
 
 def get_data(wav_file,isthisobama):
     print(f"Parsing audio file '{wav_file}'...")
-    # read audio file and convert to wav #
-    #mp3_to_wav(mp3_file,mp3_file+'.wav')
     # get ch1 data and sampling rate from wav file #
     Fs, audio_ch1 = parse_wav(wav_file)
 
@@ -127,7 +114,6 @@ def get_data(wav_file,isthisobama):
         Y_old = np.copy(Y)
 
         output[i] = [*mfcc,zcr,sro,s_cent,flux,isthisobama]
-        #output[i] = [zcr,sro,s_cent,flux,isthisobama]
 
         # plot spectrum #
         #plt.style.use('ggplot')

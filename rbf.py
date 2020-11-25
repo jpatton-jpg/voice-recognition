@@ -126,24 +126,3 @@ def train_rbf(learning_rate,training_data,dim,cluster_num):
     print(f"Final SSE: {sse}")
     print(f'Weights: {weights}')
     return weights,activ_funcs
-
-# input data #
-#with open('x.txt', 'r') as f:
-#    x = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
-#with open('y.txt', 'r') as f:
-#    y = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
-#with open('desired.txt', 'r') as f:
-#    desired = np.transpose(np.array([float(x.strip()) for x in f.readlines()]))
-
-# train rbf. get final weights and array of activation functions #
-#weights,afa = train_rbf(0.0001,np.transpose(np.vstack((x,y,desired))),2,11)
-
-# test rbf #
-#vals = [[-0.813339009464012,	-0.195601260988185],
-#[0.410240608446244,	0.105472590938348],
-#[-0.197188986165927,	0.10619560709464],
-#[-0.617995690818348,	0.192327594197712],
-#[-0.635906675816573,	-0.486379196222679]]
-
-#for i in vals:
-#    print(f'Val: {i}\nEval: {evaluate_point(afa,weights,np.array(i))}\n')

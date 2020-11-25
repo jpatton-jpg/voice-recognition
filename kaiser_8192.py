@@ -1,5 +1,5 @@
-# kaiser.py     #
-# Joseph Patton #
+# kaiser_8192.py #
+# Joseph Patton  #
 
 import numpy as np
 
