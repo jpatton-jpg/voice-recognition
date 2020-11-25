@@ -2,6 +2,7 @@
 # Joseph Patton #
 
 from components import get_data
+from components import normalize_data
 from rbf import train_rbf
 from rbf import evaluate_point
 import numpy as np
@@ -13,14 +14,20 @@ import numpy as np
 #
 ###################################################################
 
-mp3_file = 'obama.mp3'
+wav_file = './audio_files/obama_ns.wav'
 isthisobama = 1  # this audio is obama
-training_data = get_data(mp3_file,isthisobama)
+training_data = get_data(wav_file,isthisobama)
 
-mp3_file = 'not_obama.mp3'
+wav_file = './audio_files/romney_ns.wav'
 isthisobama = 0  # this audio is not obama
-training_data = np.vstack((training_data,get_data(mp3_file,isthisobama)))
+training_data = np.vstack((training_data,get_data(wav_file,isthisobama)))
 
+wav_file = './audio_files/sanders_ns.wav'
+isthisobama = 0  # this audio is not obama
+training_data = np.vstack((training_data,get_data(wav_file,isthisobama)))
+
+# normalize data to [0,1] #
+training_data = normalize_data(training_data)
 
 ###################################################################
 #
@@ -28,9 +35,9 @@ training_data = np.vstack((training_data,get_data(mp3_file,isthisobama)))
 #
 ###################################################################
 
-learning_rate   = 0.0001
-data_dimensions = 4
-cluster_num     = 10
+learning_rate   = 0.00001
+data_dimensions = 17
+cluster_num     = 17
 weights,afa = train_rbf(learning_rate,training_data,data_dimensions,cluster_num)
 
 
@@ -40,14 +47,22 @@ weights,afa = train_rbf(learning_rate,training_data,data_dimensions,cluster_num)
 #
 ###################################################################
 
-success = 0
-failure = 0
+true_pos = 0
+true_neg = 0
+false_pos = 0
+false_neg = 0
 for data in training_data:
     val = evaluate_point(afa,weights,data[0:data_dimensions])
-    if (val >= 0.5) and (data[-1] == 1):
-        success += 1
-    elif (val < 0.5) and (data[-1] == 0):
-        success += 1
+    if data[-1] == 1:
+        if val >= 0.5:
+            true_pos += 1
+        elif val < 0.5:
+            false_neg += 1
     else:
-        failure += 1
-print(f'Success rate: {success/(success+failure)}%')
+        if val < 0.5:
+            true_neg += 1
+        if val >= 0.5:
+            false_pos += 1
+print(f'Pos Success: {100*true_pos/(true_pos+false_pos)}%')
+print(f'Neg Success: {100*true_neg/(true_neg+false_neg)}%')
+print(f'Overall Success: {100*(true_pos+true_neg)/(false_pos+false_neg+true_pos+true_neg)}%')

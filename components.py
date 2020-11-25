@@ -23,19 +23,19 @@ def get_spectral_flux(X_old, X_cur, f_s):
 def mp3_to_wav(in_filename,out_filename):
     ''' convert an mp3 file to wav '''
     # read mp3 file #
-    mp3 = pydub.AudioSegment.from_mp3(in_filename)
-    # convert to wav #
-    mp3.export(out_filename, format='wav')
+    #mp3 = pydub.AudioSegment.from_mp3(in_filename).split_to_mono()
+    # convert channel 1 to wav #
+    #mp3[0].export(out_filename, format='wav')
+    # remove silence #
+    #remove_silence(out_filename)
     return
 
 
 def parse_wav(filename):
     ''' read wav file and find sample rate. return ch 1 '''
-    Fs, audio_data = scipy.io.wavfile.read(filename)
-    # take audio channel 1 #
-    audio_ch1 = np.array([x[0] for x in audio_data])
-    # filter out breaks in between words #
-    audio_ch1 = audio_ch1[audio_ch1 > 40]
+    Fs, audio = scipy.io.wavfile.read(filename)
+    # take first channel #
+    audio_ch1 = np.array(audio[:,0])
     # normalize #
     audio_ch1 = audio_ch1 / np.amax(audio_ch1)
     # center at 0 #
@@ -72,29 +72,28 @@ def get_rolloff(Y,N,f,rolloff=.85):
     return f[ind]
 
 
-def get_data(mp3_file,isthisobama):
+def get_data(wav_file,isthisobama):
+    print(f"Parsing audio file '{wav_file}'...")
     # read audio file and convert to wav #
     #mp3_to_wav(mp3_file,mp3_file+'.wav')
-
     # get ch1 data and sampling rate from wav file #
-    print('Parsing audio file...')
-    Fs, audio_ch1 = parse_wav(mp3_file+'.wav')
+    Fs, audio_ch1 = parse_wav(wav_file)
 
     bigN = audio_ch1.size  # Fs*t, total points in signal
-    N = 8192               # FFT size
+    N = 65536              # FFT size
 
     # print some useful values #
     #print('Audio file information: ')
     print(f'Audio Sampling Rate:     {Fs}')
     print(f'Total Number of Samples: {bigN}')
     #print(f'FFT Size:                {N}')
-    #print(f'# of Spectrums that will be generated: {bigN//N}')
+    print(f'# of Spectrums that will be generated: {bigN//N}')
 
     # get window function for fft as np array #
-    from kaiser import wind
+    from kaiser_65536 import wind
 
     # put data in this array #
-    output = np.zeros((bigN//N,5))
+    output = np.zeros((bigN//N,18))
 
     # hold old spectrum to calculate flux #
     Y_old = np.zeros(N//2)
@@ -127,8 +126,8 @@ def get_data(mp3_file,isthisobama):
         flux = get_spectral_flux(Y_old,Y,Fs)
         Y_old = np.copy(Y)
 
-        #output[i] = [*mfcc,zcr,sro,s_cent,flux,isthisobama]
-        output[i] = [zcr,sro,s_cent,flux,isthisobama]
+        output[i] = [*mfcc,zcr,sro,s_cent,flux,isthisobama]
+        #output[i] = [zcr,sro,s_cent,flux,isthisobama]
 
         # plot spectrum #
         #plt.style.use('ggplot')
@@ -140,4 +139,11 @@ def get_data(mp3_file,isthisobama):
         #plt.xlabel('Frequency [Hz]')
         #plt.show()
     return output
+
+
+def normalize_data(data):
+    ''' normalize data to [0,1] '''
+    for i in range(data.shape[1]):
+        data[:,i] = data[:,i] / np.amax(data[:,i])
+    return data
 

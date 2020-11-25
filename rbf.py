@@ -9,41 +9,46 @@ from kmeans import find_widths
 
 
 class ActivFunc:
-    ''' 
-    activation function for RBF
-        Args: number of dimensions (int), 
-              center of each function, one per dimension, (np float array)
-              width of each function(float) 
-    '''
     def __init__(self,dim=1,center=0,width=1):
+        ''' 
+        initialize activation function
+            Args: number of dimensions (int), 
+                  center point of each function (np float array),
+                  width of each function (float) 
+        '''
         self.dim    = dim
         self.center = center
         self.width  = width
     def eval(self,value=0):
+        # evaluating the function at multiple values #
         if len(value.shape) != 1:
             if value.shape[1] != self.dim:
-                print(f"ActiveFunc: eval() error. Wrong number of value dimensions given. Given: {value.shape[1]} Desired: {self.dim}")
+                print(f'''ActiveFunc: eval() error. Wrong number of value 
+                        dimensions given. Given: {value.shape[1]} Desired: 
+                        {self.dim}")''')
             else:
                 tmp = np.power(value-self.center,2)
                 return np.power(np.e,np.divide(-1*np.sum(tmp,axis=1),self.width))
+        # evaluating the function at one value #
         else:
             tmp = np.power(value-self.center,2)
             return np.power(np.e,np.divide(-1*np.sum(tmp),self.width))
 
 
 class ActivFuncArray(ActivFunc):
-    ''' 
-    array of activation functions 
-        Args: number of activation functions
-              number of dimensions
-              initial center value
-              initial width
-    '''
     def __init__(self, num=1, dim=1, center=0, width=1):
+        ''' 
+        initialize array of activation functions 
+            Args: number of activation functions
+                  number of data dimensions
+                  initial center point
+                  initial width value
+        '''
         self.func = np.zeros(num,dtype=ActivFunc)
         for i in range(num):
             self.func[i] = ActivFunc(dim,center,width)
     def eval_all(self,value=0):
+        # evaluate all of the activation functions #
         return np.array([thisfunc.eval(value) for thisfunc in self.func])
 
 
@@ -65,14 +70,19 @@ def init_activation_functions(training_data,data_dimensions,num_clusters):
 
 
 def evaluate_activation_functions(functions,training_data):
+    ''' evaluate the activation functions with the training data
+    to train the network '''
     return functions.eval_all(training_data)
 
 
 def evaluate_point(functions,weights,point):
+    ''' evaluate the initialized RBF NN at a point using calculated
+    weights '''
     return np.sum(functions.eval_all(point)*weights)
         
 
 def sum_square_error(activ_funcs,desired,weights):
+    ''' compute sum square error of the network '''
     actual = np.dot(weights,activ_funcs)
     return np.sum(np.power(desired-actual,2)), desired-actual
 
@@ -85,7 +95,8 @@ def gradient(activ_funcs,error):
 def train_rbf(learning_rate,training_data,dim,cluster_num):
     print('Training RBF...')
     # initialize weights vector #
-    weights = np.transpose(np.random.rand(cluster_num))
+    weights = np.transpose(np.random.rand(cluster_num)-np.random.rand(cluster_num))
+    print(f'Initial Random Weights: {weights}')
     # initialize activation functions #
     activ_funcs = init_activation_functions(training_data[:,0:dim],
                                             dim,cluster_num)
@@ -98,7 +109,6 @@ def train_rbf(learning_rate,training_data,dim,cluster_num):
     # train RBF iteratively until error stops changing #
     i = 0
     while abs(sse_diff) > 1e-30:
-    #while abs(sse_diff) > .000001:
         # get sse and desired-actual values #
         sse,error=sum_square_error(evaluated_funcs,training_data[:,-1],weights)
         # get gradient #
@@ -111,9 +121,9 @@ def train_rbf(learning_rate,training_data,dim,cluster_num):
         # keep track of training iterations #
         i += 1
         if i%50000 == 0:
-            print(f'Iterations Completed: {i}')
+            print(f'Iterations Completed: {i}   SSE: {sse}')
     # print results #
-    print(f"sse: {sse}")
+    print(f"Final SSE: {sse}")
     print(f'Weights: {weights}')
     return weights,activ_funcs
 
