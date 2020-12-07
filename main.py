@@ -33,6 +33,7 @@ training_data = np.vstack((training_data,get_data(wav_file,isthisobama)))
 # normalize data to [0,1] #
 training_data = normalize_data(training_data)
 
+
 ###################################################################
 #
 # Train RBF with training data
@@ -41,7 +42,7 @@ training_data = normalize_data(training_data)
 
 learning_rate   = 0.00001
 data_dimensions = 17
-cluster_num     = 17
+cluster_num     = data_dimensions
 weights,afa = train_rbf(learning_rate,training_data,data_dimensions,cluster_num)
 
 

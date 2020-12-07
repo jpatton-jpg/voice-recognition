@@ -3,7 +3,6 @@
 
 import numpy as np
 import scipy.io.wavfile
-import pydub
 import matplotlib.pyplot as plt
 import librosa
 
