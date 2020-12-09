@@ -119,9 +119,9 @@ def train_rbf(learning_rate,training_data,dim,cluster_num):
         sse_diff = sse_old - sse
         sse_old = sse
         # keep track of training iterations #
-        i += 1
-        if i%50000 == 0:
+        if i%50000 == 0 or i == 0:
             print(f'Iterations Completed: {i}   SSE: {sse}')
+        i += 1
     # print results #
     print(f"Final SSE: {sse}")
     print(f'Weights: {weights}')

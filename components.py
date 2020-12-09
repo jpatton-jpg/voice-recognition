@@ -8,9 +8,7 @@ import librosa
 
 
 def get_spectral_flux(X_old, X_cur, f_s):
-    ''' computes the spectral flux from the magnitude spectrum
-    https://www.audiocontentanalysis.org/code/audio-features/spectral-flux-2/
-    '''
+    ''' computes the spectral flux from the magnitude spectrum '''
     # difference spectrum (set first diff to zero)
     X = np.c_[X_old, X_cur]
     afDeltaX = np.diff(X, 1, axis=1)
