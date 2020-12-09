@@ -30,8 +30,9 @@ wav_file = './audio_files/sanders_ns.wav'
 isthisobama = 0  # this audio is not obama
 training_data = np.vstack((training_data,get_data(wav_file,isthisobama)))
 
-# normalize data to [0,1] #
+# normalize data to [0,1] and shuffle it #
 training_data = normalize_data(training_data)
+np.random.shuffle(training_data)
 
 
 ###################################################################
@@ -43,7 +44,7 @@ training_data = normalize_data(training_data)
 learning_rate   = 0.00001
 data_dimensions = 17
 cluster_num     = data_dimensions
-weights,afa = train_rbf(learning_rate,training_data,data_dimensions,cluster_num)
+weights,afa = train_rbf(learning_rate,training_data[0:1200],data_dimensions,cluster_num)
 
 
 ###################################################################
@@ -56,7 +57,7 @@ true_pos = 0
 true_neg = 0
 false_pos = 0
 false_neg = 0
-for data in training_data:
+for data in training_data[1200::]:
     val = evaluate_point(afa,weights,data[0:data_dimensions])
     # if data point is obama #
     if data[-1] == 1:
